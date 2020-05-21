@@ -12,9 +12,36 @@ class BaseRow():
 
     def __init__(self, *args):
         if not args:
+            # Set values to None if emtpy row instantiated
             args = cycle((None,))
         for slot, value in zip(self.__slots__, args):
             setattr(self, slot, value)
+
+    def __eq__(self, other):
+        if self.__slots__ != other.__slots__:
+            raise TypeError(
+                "Cant compare Rows of types {} and {}".format(
+                    self.__class__.__name__, other.__class__.__name__
+                ))
+
+        return all(
+            getattr(self, attr) == getattr(other, attr)
+            for attr in self.__slots__
+        )
+
+    def __str__(self):
+        max_slots = 3
+        return "{}({}{})".format(
+            self.__class__.__name__,
+            ",".join(
+                "{}={}".format(name, getattr(self, name))
+                for name in self.__slots__[:max_slots]
+            ),
+            "..." if len(self.__slots__) > max_slots else "",
+        )
+
+    def __repr__(self):
+        return str(self)
 
     def validate(self, validators):
         for slot in self.__slots__:
@@ -40,8 +67,6 @@ class CSVMeta(type):
 class CSV(metaclass=CSVMeta):
     def __init__(self, rows=(), *args, **kwargs):
         self._rows = [self.row_type(row) for row in rows]
-        self._changed_rows = {}
-        self._new_rows = []
 
     def add_row(self, row_data):
         self._new_rows.append = self.row_type(row_data)
@@ -59,7 +84,7 @@ class CSV(metaclass=CSVMeta):
             errors.append(row_errors)
 
         if errors:
-            raise ValidationError(error_list)
+            raise ValidationError(errors)
 
     @classmethod
     def from_csv_path(cls, csv_path):
@@ -115,14 +140,13 @@ class CSV(metaclass=CSVMeta):
 
             return OrderedDict(model_fields)
 
-    class CSVModel(CSV):
+    class CSVModel():
         """ Generates a CSV Model from a django model
 
         Mimics the behaviour of how django FormModels are generated
         from an input model by mapping the form fields into their corresponding
         CSV Fields
         """
-        __metaclass__ = CSVModelMeta
 
         FIELD_MAP = {
             django_models.CharField: fields.StringField,
