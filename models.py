@@ -13,6 +13,6 @@ class WordPressImport(models.Model):
         help_text='News items will be '
                   'created with this user '
                   'as the owner.')
-    
+
     def __str__(self):
         return 'Import from {url}'.format(url=self.url)

@@ -13,7 +13,11 @@ class WordpressForm(forms.ModelForm):
             'password',
             'user',
         )
-        
+
         widgets = {
             'password': forms.PasswordInput
         }
+
+
+class CSVMetadataImport(forms.Form):
+    pass

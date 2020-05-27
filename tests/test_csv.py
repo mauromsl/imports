@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from plugins.imports.csv import fields, CSVMeta
+from plugins.imports.csv import fields, CSVMeta, CSV
 
 
 class TestCSVModel():
@@ -71,3 +71,21 @@ class TestCSVMeta(TestCase):
         test_csv = TestCSV()
         row = test_csv.row_type()
         self.assertTupleEqual(("test_field",), row.__slots__)
+
+
+class TestCSV(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        class CSVTest(CSV):
+            field = fields.IntegerField()
+
+        cls.csv_class = CSVTest
+
+    def test_create_csv(self):
+        row = 1,
+        csv_obj = self.csv_class(row)
+        expected = [self.csv_class.row_type(*row)]
+        self.assertEqual(expected[0], csv_obj._rows[0])
+        self.assertListEqual(expected, csv_obj._rows)
